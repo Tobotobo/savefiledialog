@@ -1,58 +1,65 @@
+// savefiledialog.go
+// Copyright (c) 2021 Tobotobo
+// This software is released under the MIT License.
+// http://opensource.org/licenses/mit-license.php
+
 package savefiledialog
 
 import (
-	"github.com/lxn/walk"
+	"github.com/Tobotobo/commondialogs"
 	"github.com/lxn/win"
 )
 
-type SaveFileDialog struct {
-	OwnerForm             *walk.Form
-	TitleText             string
-	FilterText            string
+type saveFileDialog struct {
+	Owner                 win.HWND
+	Title                 string
+	Filter                string
 	FilterIndex           int
 	FilePath              string
 	InitialDirPath        string
 	IsHideOverwritePrompt bool
 }
 
+type SaveFileDialog struct {
+	InnerValue saveFileDialog
+}
+
 func New() *SaveFileDialog {
 	return &SaveFileDialog{
-		OwnerForm:             nil,
-		TitleText:             "名前を付けて保存",
-		FilterText:            "すべてのファイル(*.*)|*.*",
-		FilterIndex:           1,
-		FilePath:              "",
-		InitialDirPath:        "",
-		IsHideOverwritePrompt: false,
+		InnerValue: saveFileDialog{
+			Owner:                 0,
+			Title:                 "名前を付けて保存",
+			Filter:                "すべてのファイル(*.*)|*.*",
+			FilterIndex:           1,
+			FilePath:              "",
+			InitialDirPath:        "",
+			IsHideOverwritePrompt: false,
+		},
 	}
 }
 
 // ----------------------------------------------------------------
 
 func (dlg *SaveFileDialog) Show() (accepted bool, filePath string) {
-	wdlg := new(walk.FileDialog)
-	wdlg.Title = dlg.TitleText
-	wdlg.Filter = dlg.FilterText
-	wdlg.FilterIndex = dlg.FilterIndex
-	wdlg.FilePath = dlg.FilePath
-	wdlg.InitialDirPath = dlg.InitialDirPath
+	wdlg := new(commondialogs.FileDialog)
+	wdlg.Title = dlg.InnerValue.Title
+	wdlg.Filter = dlg.InnerValue.Filter
+	wdlg.FilterIndex = dlg.InnerValue.FilterIndex
+	wdlg.FilePath = dlg.InnerValue.FilePath
+	wdlg.InitialDirPath = dlg.InnerValue.InitialDirPath
 	wdlg.Flags = 0
 
-	if dlg.IsHideOverwritePrompt {
+	if dlg.InnerValue.IsHideOverwritePrompt {
 		wdlg.Flags &= ^uint32(win.OFN_OVERWRITEPROMPT)
 	} else {
 		wdlg.Flags |= uint32(win.OFN_OVERWRITEPROMPT)
 	}
 
-	var owner walk.Form = nil
-	if dlg.OwnerForm != nil {
-		owner = *dlg.OwnerForm
-	}
-
-	ok, err := wdlg.ShowSave(owner)
+	ok, err := wdlg.ShowSave(dlg.InnerValue.Owner)
 	if err != nil {
 		panic(err)
 	}
+	dlg.InnerValue.FilePath = wdlg.FilePath
 
 	return ok, wdlg.FilePath
 }
@@ -64,12 +71,12 @@ func Show() (accepted bool, filePath string) {
 
 // ----------------------------------------------------------------
 
-func (dlg *SaveFileDialog) Owner(owner *walk.Form) *SaveFileDialog {
-	dlg.OwnerForm = owner
+func (dlg *SaveFileDialog) Owner(owner win.HWND) *SaveFileDialog {
+	dlg.InnerValue.Owner = owner
 	return dlg
 }
 
-func Owner(owner *walk.Form) *SaveFileDialog {
+func Owner(owner win.HWND) *SaveFileDialog {
 	dlg := New()
 	return dlg.Owner(owner)
 }
@@ -77,7 +84,7 @@ func Owner(owner *walk.Form) *SaveFileDialog {
 // ----------------------------------------------------------------
 
 func (dlg *SaveFileDialog) Title(title string) *SaveFileDialog {
-	dlg.TitleText = title
+	dlg.InnerValue.Title = title
 	return dlg
 }
 
@@ -89,9 +96,9 @@ func Title(title string) *SaveFileDialog {
 // ----------------------------------------------------------------
 
 func (dlg *SaveFileDialog) Filter(filter string, index ...int) *SaveFileDialog {
-	dlg.FilterText = filter
+	dlg.InnerValue.Filter = filter
 	if len(index) > 0 {
-		dlg.FilterIndex = index[0]
+		dlg.InnerValue.FilterIndex = index[0]
 	}
 	return dlg
 }
@@ -104,7 +111,7 @@ func Filter(filter string, index ...int) *SaveFileDialog {
 // ----------------------------------------------------------------
 
 func (dlg *SaveFileDialog) InitFilePath(path string) *SaveFileDialog {
-	dlg.FilePath = path
+	dlg.InnerValue.FilePath = path
 	return dlg
 }
 
@@ -116,7 +123,7 @@ func InitFilePath(path string) *SaveFileDialog {
 // ----------------------------------------------------------------
 
 func (dlg *SaveFileDialog) InitDirPath(path string) *SaveFileDialog {
-	dlg.InitialDirPath = path
+	dlg.InnerValue.InitialDirPath = path
 	return dlg
 }
 
@@ -128,7 +135,7 @@ func InitDirPath(path string) *SaveFileDialog {
 // ----------------------------------------------------------------
 
 func (dlg *SaveFileDialog) HideOverwritePrompt() *SaveFileDialog {
-	dlg.IsHideOverwritePrompt = true
+	dlg.InnerValue.IsHideOverwritePrompt = true
 	return dlg
 }
 
