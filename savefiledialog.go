@@ -40,7 +40,7 @@ func New() *SaveFileDialog {
 
 // ----------------------------------------------------------------
 
-func (dlg *SaveFileDialog) Show() (accepted bool, filePath string) {
+func (dlg *SaveFileDialog) Show() (filePath string, accepted bool) {
 	wdlg := new(commondialogs.FileDialog)
 	wdlg.Title = dlg.InnerValue.Title
 	wdlg.Filter = dlg.InnerValue.Filter
@@ -61,10 +61,10 @@ func (dlg *SaveFileDialog) Show() (accepted bool, filePath string) {
 	}
 	dlg.InnerValue.FilePath = wdlg.FilePath
 
-	return ok, wdlg.FilePath
+	return wdlg.FilePath, ok
 }
 
-func Show() (accepted bool, filePath string) {
+func Show() (filePath string, accepted bool) {
 	dlg := New()
 	return dlg.Show()
 }
